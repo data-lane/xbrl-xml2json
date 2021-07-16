@@ -1,5 +1,5 @@
 {
-    "name": "datalane/xbrl-xml2json",
+    "name": "data-lane/xbrl-xml2json",
     "description": "DataLane's XBRL report from XML to JSON converter",
     "keywords": ["XBRL"],
 	"type": "library",
