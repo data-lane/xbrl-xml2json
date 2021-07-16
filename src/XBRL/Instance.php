@@ -7,13 +7,35 @@ use SimpleXMLElement;
 
 class Instance
 {
+    /**
+     * @var \SimpleXMLElement $xml
+     */
     private $xml;
 
+    /**
+     * @var array<string, string> $namespaces
+     */
     private $namespaces;
+
+    /**
+     * @var array<string, array> $facts
+     */
     private $facts;
+
+    /**
+     * @var array<string, array> $contexts
+     */
     private $contexts;
+
+    /**
+     * @var array<string, array> $units
+     */
     private $units;
 //    private $footnotes;
+
+    /**
+     * @var array<int, string> $taxonomyFiles
+     */
     private $taxonomyFiles;
 
     public function __construct(SimpleXMLElement $xml)
@@ -50,7 +72,10 @@ class Instance
         $this->processElements($this->xml);
     }
 
-    protected function processScenarioElement($nodes)
+    /**
+     * @return array<string, array<int, array<string, array<string, array<int, string|false>>|int|string>>>
+     */
+    protected function processScenarioElement(\SimpleXMLElement $nodes): array
     {
         $component = [];
         $ordinal = 0;
@@ -136,7 +161,10 @@ class Instance
         return $component;
     }
 
-    protected function processContextElement(SimpleXMLElement $element)
+    /**
+     * @return void
+     */
+    protected function processContextElement(SimpleXMLElement $element): void
     {
         $attributes = $element->attributes();
 
@@ -230,7 +258,10 @@ class Instance
         $this->contexts[$id] = $context;
     }
 
-    protected function processUnitElement(SimpleXMLElement $element)
+    /**
+     * @return void
+     */
+    protected function processUnitElement(SimpleXMLElement $element): void
     {
         $attributes = $element->attributes();
         if (!isset($attributes['id'])) {
@@ -250,15 +281,9 @@ class Instance
 
         if (property_exists($element, 'measure')) {
             $measures = $element->children(Constants::$prefixes[Constants::XBRLI])->measure;
-
-            if (1 == count($measures)) {
-                $this->units[$id] = (string) $element->measure;
-            } elseif (count($measures) > 1) {
-                $this->units[$id]['measures'] = $add($measures);
-            }
+            $this->units[$id]['measures'] = $add($measures);
         } elseif (property_exists($element, 'divide')) {
             $divide = $element->divide;
-
             if (property_exists($divide, 'unitNumerator')) {
                 $this->units[$id]['divide']['numerator'] = [];
 
@@ -279,7 +304,7 @@ class Instance
         }
     }
 
-    protected function processElements(SimpleXMLElement $fromRoot)
+    protected function processElements(SimpleXMLElement $fromRoot): void
     {
         $namespaces = [];
         foreach ($this->namespaces as $prefix => $namespace) {
@@ -301,7 +326,6 @@ class Instance
                                 break;
                             default:
                                 throw new \Exception('4.9 Elements other than context,unit,item,tuple are not allowed in the xbrli namespace');
-                                break;
                         }
                     }
                 }
@@ -327,8 +351,13 @@ class Instance
 //                            'language' => 'et-ee'
                         ];
 
-                        if (isset($this->units[(string) $attributes['unitRef']])) {
-                            $fact['dimensions']['unit'] = $this->units[(string) $attributes['unitRef']];
+                        $unitRef = (string) $attributes['unitRef'];
+                        if (isset($this->units[$unitRef])) {
+                            if (isset($this->units[$unitRef]['measures'])) {
+                                $fact['dimensions']['unit'] = $this->units[$unitRef]['measures'][0];
+                            } else {
+                                //TODO: multiple measures or divide
+                            }
                         }
 
                         if (isset($this->contexts[(string) $attributes['contextRef']]['scenario'])) {
@@ -342,16 +371,25 @@ class Instance
         }
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getTaxonomy(): array
     {
         return $this->taxonomyFiles;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getNamespaces(): array
     {
         return $this->namespaces;
     }
 
+    /**
+     * @return array<string, array>
+     */
     public function getFacts(): array
     {
         return $this->facts;

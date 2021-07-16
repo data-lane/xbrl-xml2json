@@ -14,7 +14,10 @@ class Constants
     public const SCHEMA  = 'xs';
     public const GENERIC = 'gen';
 
-    public static $prefixes = [
+    /**
+     * @var array<string, string> $prefixes
+     */
+    public static array $prefixes = [
         'xml'    => 'http://www.w3.org/XML/1998/namespace',
         'xbrli'  => 'http://www.xbrl.org/2003/instance',
         'link'   => 'http://www.xbrl.org/2003/linkbase',
@@ -22,9 +25,12 @@ class Constants
         'xbrldi' => 'http://xbrl.org/2006/xbrldi'
     ];
 
+    /**
+     * @var array<string, string> $standardNamespaces
+     */
     public static $standardNamespaces = [];
 
-    public static function __static()
+    public static function __static(): void
     {
         $prefixes = [
             self::SCHEMA,
