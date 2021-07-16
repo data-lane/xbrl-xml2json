@@ -81,83 +81,88 @@ class Instance
         $ordinal = 0;
 
         $domNode = dom_import_simplexml($nodes);
-        foreach ($domNode->childNodes as $childNode) {
-            if (XML_ELEMENT_NODE != $childNode->nodeType) {
-                continue;
-            }
+        if ($domNode !== false) {
+            foreach ($domNode->childNodes as $childNode) {
+                if (XML_ELEMENT_NODE != $childNode->nodeType) {
+                    continue;
+                }
 
-            $memberKey = $childNode->localName;
-            $member = simplexml_import_dom($childNode);
+                $memberKey = $childNode->localName;
+                $member = simplexml_import_dom($childNode);
 
-            if (
-                ($childNode->namespaceURI == Constants::$prefixes[Constants::XBRLDI]) &&
-                   ('explicitMember' == $memberKey || 'typedMember' == $memberKey)
-            ) {
-                $memberAttributes = $member->attributes();
-                if ('explicitMember' == $memberKey) {
-                    $component[$member->getName()][] = [
-                        'dimension' => (string) $memberAttributes['dimension'],
-                        'member' => (string) $member,
-                        'ordinal' => $ordinal,
-                    ];
-                } else {
-                    $members = [];
-                    $namespaces = [];
+                if (
+                    ($childNode->namespaceURI == Constants::$prefixes[Constants::XBRLDI]) &&
+                    ('explicitMember' == $memberKey || 'typedMember' == $memberKey)
+                ) {
+                    $memberAttributes = $member->attributes();
+                    if ('explicitMember' == $memberKey) {
+                        $component[$member->getName()][] = [
+                            'dimension' => (string) $memberAttributes['dimension'],
+                            'member' => (string) $member,
+                            'ordinal' => $ordinal,
+                        ];
+                    } else {
+                        $members = [];
+                        $namespaces = [];
 
-                    foreach ($member->getNamespaces(true) as $prefix => $namespace) {
-                        if (isset($namespaces[$namespace])) {
-                            continue;
-                        }
-                        $namespaces[$namespace] = $prefix;
-
-                        $namespaceMembers = $member->children($namespace);
-                        if (!count($namespaceMembers)) {
-                            continue;
-                        }
-
-                        $prefixMap = [];
-                        $localNamespaces = $namespaceMembers->getDocNamespaces(true, false);
-                        $globalNamespaces = array_flip($namespaceMembers->getDocNamespaces(false, true));
-                        foreach ($localNamespaces as $localPrefix => $localNamespace) {
-                            if (!isset($globalNamespaces[$localNamespace])) {
+                        foreach ($member->getNamespaces(true) as $prefix => $namespace) {
+                            if (isset($namespaces[$namespace])) {
                                 continue;
                             }
-                            $globalPrefix = $globalNamespaces[$localNamespace];
-                            $prefixMap[$localPrefix] = $globalPrefix;
-                        }
+                            $namespaces[$namespace] = $prefix;
 
-                        if (empty($prefix)) {
-                            $name = $namespaceMembers->getName();
-                        } else {
-                            // Lookup the prefix for the namespace
-                            if (isset($prefixMap[$prefix])) {
-                                $prefix = $prefixMap[$prefix];
-                            }
-                            $name = $prefix . ':' . $namespaceMembers->getName();
-                        }
-
-                        $members[$name] = [];
-                        foreach ($namespaceMembers as $namespaceMember) {
-                            /** @var \SimpleXMLElement $namespaceMember */
-                            $xml = $namespaceMember->asXML();
-                            foreach ($prefixMap as $localPrefix => $globalPrefix) {
-                                $xml = str_replace("$localPrefix:", "$globalPrefix:", $xml);
+                            $namespaceMembers = $member->children($namespace);
+                            if (!count($namespaceMembers)) {
+                                continue;
                             }
 
-                            $members[$name][] = $xml;
+                            $prefixMap = [];
+                            $localNamespaces = $namespaceMembers->getDocNamespaces(true, false);
+                            $globalNamespaces = array_flip($namespaceMembers->getDocNamespaces(false, true));
+                            foreach ($localNamespaces as $localPrefix => $localNamespace) {
+                                if (!isset($globalNamespaces[$localNamespace])) {
+                                    continue;
+                                }
+                                $globalPrefix = $globalNamespaces[$localNamespace];
+                                $prefixMap[$localPrefix] = $globalPrefix;
+                            }
+
+                            if (empty($prefix)) {
+                                $name = $namespaceMembers->getName();
+                            } else {
+                                // Lookup the prefix for the namespace
+                                if (isset($prefixMap[$prefix])) {
+                                    $prefix = $prefixMap[$prefix];
+                                }
+                                $name = $prefix . ':' . $namespaceMembers->getName();
+                            }
+
+                            $members[$name] = [];
+                            foreach ($namespaceMembers as $namespaceMember) {
+                                /** @var \SimpleXMLElement $namespaceMember */
+                                $xml = $namespaceMember->asXML();
+                                if ($xml !== false) {
+                                    foreach ($prefixMap as $localPrefix => $globalPrefix) {
+                                        $xml = str_replace("$localPrefix:", "$globalPrefix:", $xml);
+                                    }
+                                }
+
+                                $members[$name][] = $xml;
+                            }
                         }
+                        $component[$member->getName()][] = [
+                            'dimension' => (string) $memberAttributes['dimension'],
+                            'member' => $members,
+                            'ordinal' => $ordinal,
+                        ];
                     }
-                    $component[$member->getName()][] = [
-                        'dimension' => (string) $memberAttributes['dimension'],
-                        'member' => $members,
-                        'ordinal' => $ordinal,
-                    ];
+                } else {
+                    throw new \Exception('Read taxonomy');
                 }
-            } else {
-                throw new \Exception('Read taxonomy');
             }
+        } else {
+            //TODO: what if domnode is false
         }
-
         return $component;
     }
 
@@ -219,7 +224,7 @@ class Instance
 
         if (property_exists($element, 'period')) {
             $periodElement = $element->period;
-            $period = ['type' => 'duration'];
+            $period = ['startDate' => '', 'endDate' => '', 'type' => 'duration'];
 
             foreach ($periodElement->children(Constants::$prefixes[Constants::XBRLI]) as $periodChildKey => $periodChild) {
                 $date = (string) $periodChild;
