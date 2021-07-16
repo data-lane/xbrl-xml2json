@@ -1,0 +1,32 @@
+{
+    "name": "datalane/xbrl-xml2json",
+    "description": "DataLane's XBRL report from XML to JSON converter",
+    "keywords": ["XBRL"],
+	"type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vladimir Rüntü",
+            "email": "vladsrynty@gmail.com",
+            "homepage": "https://github.com/vladsrynty"
+        }
+    ],
+    "require": {
+        "php": ">=7.0",
+		"ext-SimpleXML" : "*"
+    },
+	"autoload" : {
+		"psr-4" : {
+			"Datalane\\" : "src/"
+		}
+	},
+    "autoload-dev": {
+        "psr-4": {
+           "Datalane\\Tests\\" : "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.2",
+        "phpstan/phpstan": "^0.12.37"
+    }
+}
