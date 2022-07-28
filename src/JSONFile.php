@@ -7,8 +7,8 @@ use Datalane\XBRL\Instance;
 
 class JSONFile
 {
-    public const VERSION = '2021-02-03';
-    public const DOCUMENT_TYPE = 'https://xbrl.org/CR/' . self::VERSION . '/xbrl-json';
+    public const VERSION = '2021';
+    public const DOCUMENT_TYPE = 'https://xbrl.org/'.self::VERSION.'/xbrl-json';
 
     public static function convertInstance(Instance $inst): string
     {
@@ -17,11 +17,11 @@ class JSONFile
         unset($ns[Constants::XBRLI]);
         unset($ns[Constants::LINK]);
         unset($ns[Constants::XLINK]);
-        $ns[Constants::XBRL] = 'https://xbrl.org/CR/' . self::VERSION;
+        $ns[Constants::XBRL] = 'https://xbrl.org/' . self::VERSION;
         $json = ['documentInfo' => [
             'documentType' => self::DOCUMENT_TYPE,
                 'features' => [
-                    'xbrl:canonicalValues' => false
+                    'xbrl:canonicalValues' => true
                 ],
             'namespaces' => $ns,
             'taxonomy' => $inst->getTaxonomy()
