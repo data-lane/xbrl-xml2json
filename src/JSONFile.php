@@ -18,6 +18,8 @@ class JSONFile
         unset($ns[Constants::LINK]);
         unset($ns[Constants::XLINK]);
         $ns[Constants::XBRL] = 'https://xbrl.org/' . self::VERSION;
+        $ns[Constants::XBRLI] = $ns[''];
+        unset($ns['']);
         $json = ['documentInfo' => [
             'documentType' => self::DOCUMENT_TYPE,
                 'features' => [
