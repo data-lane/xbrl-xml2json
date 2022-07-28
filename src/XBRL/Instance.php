@@ -345,6 +345,7 @@ class Instance
                     $attributes = $element->attributes();
                     //It's a fact
                     if (isset($attributes['unitRef']) || isset($attributes['contextRef'])) {
+
                         $fact = ['value' => (string) $element];
                         if (isset($attributes['decimals'])) {
                             $fact['decimals'] = (int) $attributes['decimals'];
@@ -358,7 +359,7 @@ class Instance
 
                         $unitRef = (string) $attributes['unitRef'];
                         if (isset($this->units[$unitRef])) {
-                            if (isset($this->units[$unitRef]['measures'])) {
+                            if (isset($this->units[$unitRef]['measures']) && $this->units[$unitRef]['measures'][0] != 'pure') {
                                 $fact['dimensions']['unit'] = $this->units[$unitRef]['measures'][0];
                             } else {
                                 //TODO: multiple measures or divide
