@@ -247,7 +247,7 @@ class Instance
                 }
             }
 
-            //An end date or instant with no time component is interpretted as
+            //An end date or instant with no time component is interpreted as
             //24:00:00 on that day (or, equivalently, as 00:00:00 on the following day)
             $tmp = new \DateTime($period['startDate']);
             $context['period'] = $tmp->modify('+1 day')->format('Y-m-d\T00:00:00');
