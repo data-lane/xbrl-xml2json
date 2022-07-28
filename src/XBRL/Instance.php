@@ -361,6 +361,9 @@ class Instance
                         if (isset($this->units[$unitRef])) {
                             if (isset($this->units[$unitRef]['measures']) && $this->units[$unitRef]['measures'][0] != 'pure') {
                                 $fact['dimensions']['unit'] = $this->units[$unitRef]['measures'][0];
+                                if (substr($this->units[$unitRef]['measures'][0], 0, 7) == 'iso4217') {
+                                    $fact['value'] = number_format((float)$fact['value'], 1, '.', '');
+                                }
                             } else {
                                 //TODO: multiple measures or divide
                             }
