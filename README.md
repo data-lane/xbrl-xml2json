@@ -1,6 +1,6 @@
 # XBRL file converter from XML to JSON format
 
-Convert XBRL-based financial/business document from XML to JSON format, according to XBRL Consortium recommendations ([xbrl-json-CR-2021-02-03](https://www.xbrl.org/Specification/xbrl-json/CR-2021-02-03/xbrl-json-CR-2021-02-03.html)).
+Convert XBRL-based financial/business document from XML to JSON format, according to XBRL Consortium recommendations ([xbrl-json-REC-2021-10-13](https://www.xbrl.org/Specification/xbrl-json/REC-2021-10-13/xbrl-json-REC-2021-10-13.html)).
 
 ## Quickstart example
 
