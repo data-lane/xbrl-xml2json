@@ -249,12 +249,15 @@ class Instance
 
             //An end date or instant with no time component is interpreted as
             //24:00:00 on that day (or, equivalently, as 00:00:00 on the following day)
-            $tmp = new \DateTime($period['startDate']);
-            $context['period'] = $tmp->modify('+1 day')->format('Y-m-d\T00:00:00');
             if ($period['type'] == 'duration') {
+                $tmp = new \DateTime($period['startDate']);
+                $context['period'] = $tmp->format('Y-m-d\T00:00:00');
                 $tmp = new \DateTime($period['endDate']);
                 $period['endDate'] = $tmp->modify('+1 day')->format('Y-m-d\T00:00:00');
                 $context['period'] .= '/' . $period['endDate'];
+            } else {
+                $tmp = new \DateTime($period['startDate']);
+                $context['period'] = $tmp->modify('+1 day')->format('Y-m-d\T00:00:00');
             }
         } else {
             throw new \Exception('4.7 Element <context> must contain period element');
