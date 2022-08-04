@@ -10,7 +10,7 @@ class JSONFile
     public const VERSION = '2021';
     public const DOCUMENT_TYPE = 'https://xbrl.org/'.self::VERSION.'/xbrl-json';
 
-    public static function convertInstance(Instance $inst): string
+    public static function convertInstance(Instance $inst, $returnArray = false): string|array
     {
         $ns = $inst->getNamespaces();
         $ns[Constants::XBRL] = 'https://xbrl.org/' . self::VERSION;
@@ -27,6 +27,9 @@ class JSONFile
             ],
             'facts' => $inst->getFacts()
         ];
+        if ($returnArray) {
+            return $json;
+        }
         $ret = json_encode($json, JSON_UNESCAPED_SLASHES);
         if ($ret === false) {
             throw new \Exception('Converting to JSON format failed');
