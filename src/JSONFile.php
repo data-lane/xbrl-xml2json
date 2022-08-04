@@ -13,15 +13,10 @@ class JSONFile
     public static function convertInstance(Instance $inst): string
     {
         $ns = $inst->getNamespaces();
-        unset($ns[Constants::XBRLDI]);
-        unset($ns[Constants::XBRLI]);
-        unset($ns[Constants::LINK]);
-        unset($ns[Constants::XLINK]);
         $ns[Constants::XBRL] = 'https://xbrl.org/' . self::VERSION;
         if (isset($ns[''])) {
-            $ns[Constants::XBRLI] = $ns[''];
+            unset($ns['']);
         }
-        unset($ns['']);
         $json = ['documentInfo' => [
             'documentType' => self::DOCUMENT_TYPE,
                 'features' => [
