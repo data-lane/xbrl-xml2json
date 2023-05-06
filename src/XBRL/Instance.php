@@ -69,6 +69,7 @@ class Instance
                 $this->taxonomyFiles[] = $taxonomyFile;
             }
         }
+        $this->processXBRLIElements($this->xml);
         $this->processElements($this->xml);
     }
 
@@ -312,72 +313,71 @@ class Instance
         }
     }
 
-    protected function processElements(SimpleXMLElement $fromRoot): void
+    protected function processXBRLIElements(SimpleXMLElement $fromRoot): void
     {
-        $namespaces = [];
-        foreach ($this->namespaces as $prefix => $namespace) {
-            if (!isset($namespaces[$namespace])) {
-                if ($namespace === Constants::$prefixes[Constants::XBRLI]) {
-                    $namespaces[$namespace] = $prefix;
-
-                    //$this->processXBRLIElement();
-                    foreach ($fromRoot->children($namespace) as $elementKey => $element) {
-                        switch ($elementKey) {
-                            case 'context':
-                                $this->processContextElement($element);
-                                break;
-                            case 'unit':
-                                $this->processUnitElement($element);
-                                break;
-                            case 'item':
-                            case 'tuple':
-                                break;
-                            default:
-                                throw new \Exception('4.9 Elements other than context,unit,item,tuple are not allowed in the xbrli namespace');
-                        }
-                    }
-                }
+        foreach ($fromRoot->children(Constants::$prefixes[Constants::XBRLI]) as $elementKey => $element) {
+            switch ($elementKey) {
+                case 'context':
+                    $this->processContextElement($element);
+                    break;
+                case 'unit':
+                    $this->processUnitElement($element);
+                    break;
+                case 'item':
+                case 'tuple':
+                    break;
+                default:
+                    throw new \Exception('4.9 Elements other than context,unit,item,tuple are not allowed in the xbrli namespace');
             }
         }
+    }
 
-        $fidx = 36760;
+    protected function processElements(SimpleXMLElement $fromRoot, string $tupleName = ''): void
+    {
+        static $tupleIdx = 1;
+        if ($tupleName != '') {
+            $tupleIdx++;
+        }
+        static $fidx = 36760;
         foreach ($this->namespaces as $prefix => $namespace) {
-            if (!isset($namespaces[$namespace])) {
-                $namespaces[$namespace] = $prefix;
-                foreach ($fromRoot->children($namespace) as $elementKey => $element) {
-                    $attributes = $element->attributes();
-                    //It's a fact
-                    if (isset($attributes['unitRef']) || isset($attributes['contextRef'])) {
+            foreach ($fromRoot->children($namespace) as $elementKey => $element) {
+                $attributes = $element->attributes();
+                //It's a fact
+                if (isset($attributes['unitRef']) || isset($attributes['contextRef'])) {
 
-                        $fact = ['value' => (string) $element];
-                        if (isset($attributes['decimals'])) {
-                            $fact['decimals'] = (int) $attributes['decimals'];
-                        }
-                        $fact['dimensions'] = [
-                            'concept' => $prefix . ':' . $element->getName(),
-                            'entity' => 'scheme:' . $this->contexts[(string) $attributes['contextRef']]['entity']['identifier']['value'],
-                            'period' => $this->contexts[(string) $attributes['contextRef']]['period'],
-//                            'language' => 'et-ee'
-                        ];
-
-                        $unitRef = (string) $attributes['unitRef'];
-                        if (isset($this->units[$unitRef])) {
-                            if (isset($this->units[$unitRef]['measures']) && $this->units[$unitRef]['measures'][0] != 'pure') {
-                                $fact['dimensions']['unit'] = $this->units[$unitRef]['measures'][0];
-                                if (substr($this->units[$unitRef]['measures'][0], 0, 7) == 'iso4217') {
-                                    $fact['value'] = number_format((float)$fact['value'], 1, '.', '');
-                                }
-                            } else {
-                                //TODO: multiple measures or divide
-                            }
-                        }
-
-                        if (isset($this->contexts[(string) $attributes['contextRef']]['scenario'])) {
-                            $scenario = $this->contexts[(string) $attributes['contextRef']]['scenario'];
-                            $fact['dimensions'][$scenario['explicitMember'][0]['dimension']] = $scenario['explicitMember'][0]['member'];
-                        }
-                        $this->facts['f' . $fidx++] = $fact;
+                    $fact = ['value' => (string) $element];
+                    if (isset($attributes['decimals'])) {
+                        $fact['decimals'] = (int) $attributes['decimals'];
                     }
+                    $fact['dimensions'] = [
+                        'concept' => $prefix . ':' . $element->getName(),
+                        'entity' => 'scheme:' . $this->contexts[(string) $attributes['contextRef']]['entity']['identifier']['value'],
+                        'period' => $this->contexts[(string) $attributes['contextRef']]['period'],
+                    ];
+                    if ($tupleName != '') {
+                        $fact['dimensions']['tuple'] = $tupleName.$tupleIdx;
+                    }
+
+                    $unitRef = (string) $attributes['unitRef'];
+                    if (isset($this->units[$unitRef])) {
+                        if (isset($this->units[$unitRef]['measures']) && $this->units[$unitRef]['measures'][0] != 'pure') {
+                            $fact['dimensions']['unit'] = $this->units[$unitRef]['measures'][0];
+                            if (substr($this->units[$unitRef]['measures'][0], 0, 7) == 'iso4217') {
+                                $fact['value'] = number_format((float)$fact['value'], 1, '.', '');
+                            }
+                        } else {
+                            //TODO: multiple measures or divide
+                        }
+                    }
+
+                    if (isset($this->contexts[(string) $attributes['contextRef']]['scenario'])) {
+                        $scenario = $this->contexts[(string) $attributes['contextRef']]['scenario'];
+                        $fact['dimensions'][$scenario['explicitMember'][0]['dimension']] = $scenario['explicitMember'][0]['member'];
+                    }
+                    $this->facts['f' . $fidx++] = $fact;
+                //It's a structure (tuple)
+                } else {
+                    $this->processElements($element, $prefix.':'.$element->getName());
                 }
             }
         }
